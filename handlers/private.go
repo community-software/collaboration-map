@@ -37,7 +37,6 @@ func StartBot(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 }
 
 func CreateSpot(update tgbotapi.Update, bot *tgbotapi.BotAPI, activeSpotCreations t.ActiveSpotCreations) {
-	clientOptions := db.GetClientOptions()
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 	msg.ReplyMarkup = helpers.PrivateChatMainKeyboard
@@ -66,6 +65,8 @@ func CreateSpot(update tgbotapi.Update, bot *tgbotapi.BotAPI, activeSpotCreation
 			msg.Text = "Please enter a location"
 		case 3:
 			if update.Message.Location != nil {
+				clientOptions := db.GetClientOptions()
+
 				activeCreationSession.Data.Lat = update.Message.Location.Latitude
 				activeCreationSession.Data.Lon = update.Message.Location.Longitude
 				activeCreationSession.Step++
@@ -147,6 +148,10 @@ func CreateSpot(update tgbotapi.Update, bot *tgbotapi.BotAPI, activeSpotCreation
 		case "get all chats":
 			{
 				msg.Text = "Getting chats..."
+			}
+		default:
+			{
+				msg.Text = "Choose an action"
 			}
 		}
 	}

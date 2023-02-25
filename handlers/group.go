@@ -8,8 +8,10 @@ import (
 	"map/helpers"
 	"map/tgbotapi"
 	t "map/types"
+	"map/utils"
 	"strconv"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -27,16 +29,23 @@ func ConnectUserToChatMap(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		log.Fatal(err)
 	}
 
-	user, err := client.Database("data").Collection("users").FindOne(context.TODO(), t.User{ID: update.CallbackQuery.From.ID}).DecodeBytes()
+	// msgStr, _ := json.Marshal(update.CallbackQuery.Message)
+	// log.Println(msgStr)
+
+	user, err := client.Database("data").Collection("users").FindOne(context.TODO(), bson.M{"id": update.CallbackQuery.From.ID}).DecodeBytes()
 	if err != nil {
+		log.Println("User was created")
+		log.Println(err)
 		client.Database("data").Collection("users").InsertOne(context.TODO(), t.User{
-			Username: update.CallbackQuery.Message.From.UserName,
-			ID:       update.CallbackQuery.Message.From.ID,
+			Username: update.CallbackQuery.From.UserName,
+			ID:       update.CallbackQuery.From.ID,
 			Chats:    []int64{update.CallbackQuery.Message.Chat.ID},
 		})
 	} else {
+		log.Println("User was found")
 		var userObj t.User
 		json.Unmarshal(user, &userObj)
+		utils.Log(userObj)
 		userObj.Chats = append(userObj.Chats, update.CallbackQuery.Message.Chat.ID)
 		client.Database("data").Collection("users").UpdateOne(context.TODO(), t.User{ID: update.CallbackQuery.From.ID}, userObj)
 	}
