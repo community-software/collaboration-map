@@ -6,8 +6,8 @@ on:
 
 env: 
   REGISTRY: "registry.digitalocean.com/henar"
-  IMAGE_NAME: "map-bot"
-  CONTAINER_NAME: "map-bot"
+  IMAGE_NAME: "map-bot-test"
+  CONTAINER_NAME: "map-bot-test"
 
 jobs:
   build:
