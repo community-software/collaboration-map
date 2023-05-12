@@ -29,6 +29,7 @@ func StartBot(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		ID:       update.Message.From.ID,
 		Chats:    []int64{},
 	})
+	
 
 	// send a success message
 	msg.Text = "Account created!"
