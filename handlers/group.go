@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 	"map/db"
 	"map/helpers"
@@ -18,6 +16,7 @@ import (
 
 func ConnectUserToChatMap(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	clientOptions := db.GetClientOptions()
+	msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
 
 	callback := tgbotapi.NewCallback(update.CallbackQuery.ID, update.CallbackQuery.Data)
 	if _, err := bot.Request(callback); err != nil {
@@ -30,42 +29,35 @@ func ConnectUserToChatMap(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		log.Fatal(err)
 	}
 
-	// msgStr, _ := json.Marshal(update.CallbackQuery.Message)
-	// log.Println(msgStr)
-
-	user, err := client.Database("data").Collection("users").FindOne(context.TODO(), bson.M{"id": update.CallbackQuery.From.ID}).DecodeBytes()
-	if err != nil {
-		log.Println("User was created")
-		log.Println(err)
+	var userObj t.User
+	findErr := client.Database("data").Collection("users").FindOne(context.TODO(), bson.M{"id": update.CallbackQuery.From.ID}).Decode(&userObj)
+	if findErr != nil {
 		client.Database("data").Collection("users").InsertOne(context.TODO(), t.User{
 			Username: update.CallbackQuery.From.UserName,
 			ID:       update.CallbackQuery.From.ID,
 			Chats:    []int64{update.CallbackQuery.Message.Chat.ID},
 		})
+		msg.Text = "@" + update.CallbackQuery.From.UserName + ", you are on map!\nPlease, add me to your private chat and push start"
 	} else {
-		log.Println("User was found")
-		var userObj t.User
-		json.Unmarshal(user, &userObj)
+		chats := userObj.Chats
 
-		utils.Log(userObj)
-
-		result, err := client.Database("data").Collection("users").UpdateOne(
-			context.TODO(),
-			bson.M{"id": update.CallbackQuery.From.ID},
-			bson.D{{
-				Key: "$set",
-				Value: bson.D{{
-					Key: "chats", Value: append(userObj.Chats, update.CallbackQuery.Message.Chat.ID),
+		if utils.Contains(chats, update.CallbackQuery.Message.Chat.ID) {
+			msg.Text = "@" + update.CallbackQuery.From.UserName + ", you are already on map!"
+		} else {
+			client.Database("data").Collection("users").UpdateOne(
+				context.TODO(),
+				bson.M{"id": update.CallbackQuery.From.ID},
+				bson.D{{
+					Key: "$set",
+					Value: bson.D{{
+						Key: "chats", Value: append(userObj.Chats, update.CallbackQuery.Message.Chat.ID),
+					}},
 				}},
-			}},
-		)
-		if err != nil {
-			log.Fatal(err)
+			)
+			msg.Text = "@" + update.CallbackQuery.From.UserName + ", you are on map!\nPlease, add me to your private chat and push start"
 		}
-		fmt.Println(result)
+
 	}
-	msg := tgbotapi.NewMessage(update.CallbackQuery.Message.Chat.ID, "")
-	msg.Text = "@" + update.CallbackQuery.From.UserName + ", you are on map!\nPlease, add me to your private chat and push start"
 	bot.Send(msg)
 }
 
