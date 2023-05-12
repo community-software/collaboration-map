@@ -32,7 +32,7 @@ func StartBot(update tgbotapi.Update, bot *tgbotapi.BotAPI) {
 
 	// send a success message
 	msg.Text = "Account created!"
-	msg.ReplyMarkup = helpers.PrivateChatMainKeyboard
+	msg.ReplyMarkup = helpers.GetWebAppKeyboard("1=2")
 	bot.Send(msg)
 }
 
