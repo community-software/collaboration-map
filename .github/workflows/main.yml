@@ -44,7 +44,7 @@ jobs:
           script:
             docker login -u ${{ secrets.DO_API_KEY }} -p ${{ secrets.DO_API_KEY }} $(echo $REGISTRY)
 
-            docker run -d --name $(echo $CONTAINER_NAME) -p $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)              
+            docker run -d --name map-bot -p $(echo $REGISTRY)/map-bot:$(echo $GITHUB_SHA | head -c7)              
             # docker stop $(echo $CONTAINER_NAME) || true
 
             # docker rm $(echo $CONTAINER_NAME) || true
